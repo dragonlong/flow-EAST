@@ -242,14 +242,14 @@ class Aggregation(object):
                     batch_norm_updates_op = tf.group(*tf.get_collection(tf.GraphKeys.UPDATE_OPS, scope))
                     reuse_variables = True
         # #>>>>>>>>>>>>>>>>>>>>>>>>>>>> collect gradients from different devices and get the averaged gradient, large batch size
-        self.summary_op = tf.summary.merge_all()
+        # self.summary_op = tf.summary.merge_all()
         # save moving average
-        variable_averages = tf.train.ExponentialMovingAverage(
-            FLAGS.moving_average_decay, global_step)
-        variables_averages_op = variable_averages.apply(tf.trainable_variables())
-        # batch norm updates
-        with tf.control_dependencies([variables_averages_op, apply_gradient_op, batch_norm_updates_op]):
-            self.train_op = tf.no_op(name='train_op')
+        # variable_averages = tf.train.ExponentialMovingAverage(
+        #     FLAGS.moving_average_decay, global_step)
+        # variables_averages_op = variable_averages.apply(tf.trainable_variables())
+        # # batch norm updates
+        # with tf.control_dependencies([variables_averages_op, apply_gradient_op, batch_norm_updates_op]):
+        #     self.train_op = tf.no_op(name='train_op')
         # self.summary_writer = tf.summary.FileWriter(FLAGS.checkpoint_path, tf.get_default_graph())
 
 

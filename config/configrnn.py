@@ -6,6 +6,7 @@ global FLAGS
 BASIC = "baisc"
 CUDNN = "cudnn"
 BLOCK = "block"
+CONV  = "conv2d"
 CUDNN_INPUT_LINEAR_MODE = "linear_input"
 CUDNN_RNN_BIDIRECTION   = "bidirection"
 CUDNN_RNN_UNIDIRECTION  = "unidirection"
@@ -26,8 +27,8 @@ def get_config(FLAGS):
         raise ValueError("Invalid model: %s", FLAGS.model)
     if FLAGS.rnn_mode:
         config.rnn_mode = FLAGS.rnn_mode
-    if FLAGS.num_gpus != 1 or tf.__version__ < "1.3.0" :
-        config.rnn_mode = BASIC
+    # if FLAGS.num_gpus != 1 or tf.__version__ < "1.3.0" :
+    #     config.rnn_mode = BASIC
     return config
 
 
@@ -47,7 +48,7 @@ class TestConfig(object):
     lr_decay      = 0.9999
     batch_size    = 8
     vocab_size    = 25600
-    rnn_mode      = BLOCK
+    rnn_mode      = CONV
     shape         = [512, 512]
     filters       = 32
     kernel        = [3, 3]
