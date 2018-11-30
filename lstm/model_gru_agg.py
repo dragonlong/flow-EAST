@@ -107,7 +107,7 @@ def gru_agg(input, state, config, reuse_variables, is_training=True, lstm=True):
         if lstm:
             cell = tf.contrib.rnn.MultiRNNCell(
                 [make_cell() for _ in range(config.num_layers)], state_is_tuple=True)
-            initial_state = cell.zero_state(config.batch_size, tf.float32)
+            initial_state = cell.zero_state(FLAGS.batch_size_per_gpu, tf.float32)
             if state is None:
                 state = initial_state
             output, state = cell(input, state)

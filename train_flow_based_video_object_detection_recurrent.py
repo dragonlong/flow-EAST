@@ -41,7 +41,6 @@ import GPUtil
 from copy import deepcopy
 import pandas as pd
 import seaborn as sns
-
 import tensorflow as tf
 from tensorflow.contrib import slim
 from model import model
@@ -107,7 +106,8 @@ def main(argv=None):
     config.batch_size = FLAGS.batch_size_per_gpu * FLAGS.num_gpus
     config.num_layers = 3
     config.num_steps  = 5
-    eval_config = config
+    #
+    eval_config = get_config(FLAGS)
     eval_config.batch_size = 2
     eval_config.num_layers = 3
     eval_config.num_steps  = 5
@@ -144,9 +144,9 @@ def main(argv=None):
     'gpu_devices': ['/device:GPU:0', '/device:GPU:1'],
     # controller device to put the model's variables on (usually, /cpu:0 or /gpu:0 -> try both!)
     'controller': '/device:CPU:0',
-    'x_dtype': tf.float32,  # image pairs input type
+    'x_dtype': tf.float32,     # image pairs input type
     'x_shape': [512, 512, 3],  # image pairs input shape [2, H, W, 3]
-    'y_score_shape': [128, 128, 1],  # u,v flows output type
+    'y_score_shape': [128, 128, 1],     # u,v flows output type
     'y_geometry_shape': [128, 128, 5],  # u,v flows output shape [H, W, 2]
     'x_mask_shape': [128, 128, 1]
     }
@@ -260,7 +260,7 @@ def main(argv=None):
     print("Step 3: PWC model has been reconstructed")
     GPUtil.showUtilization()
     train_data_generator = icdar.get_batch_seq(num_workers=FLAGS.num_readers, config=config, is_training=True)
-    val_data_generator = icdar.get_batch_seq(num_workers=FLAGS.num_readers, config=eval_config, is_training=False)
+    # val_data_generator = icdar.get_batch_seq(num_workers=FLAGS.num_readers, config=eval_config, is_training=False)
     start = time.time()
 #============================= IV. Training over Steps(!!!)================================================#
     print("Now we're starting training!!!")

@@ -46,7 +46,6 @@ tf.app.flags.DEFINE_float('min_crop_side_ratio', 0.1,
 
 FLAGS = tf.app.flags.FLAGS
 
-
 def get_images():
     files = []
     for ext in ['jpg', 'png', 'jpeg', 'JPG']:
@@ -1439,6 +1438,7 @@ def generator_fast_sequence(config=None, is_training=True,
                     geo_maps[m, :, :, :] = geo_map_raw
                     training_masks[m, :, :] = training_mask_raw
                 imgs_c, score_maps_c, geo_maps_c, training_masks_c = crop_all_random_seq(config, data, score_maps, geo_maps, training_masks)
+                print("Cropping one video sequence")
                 if imgs_c is not None:
                     images_seq.append(imgs_c.astype(np.float32))
                     score_maps_seq.append(score_maps_c[:, ::4, ::4, np.newaxis].astype(np.float32))
