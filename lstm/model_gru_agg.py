@@ -3,7 +3,7 @@
 LOG:
 Sep. 13th: add graph freeze on the feature fusion + ConvLSTM part
 Sep. 23th: add tensorboard visualization on sub loss
-Oct
+Dec. 7th : no score map loss;
 
 """
 from __future__ import absolute_import
@@ -50,6 +50,22 @@ def get_gru_cell(config, is_training):
     raise ValueError("rnn_mode %s not supported" % config.rnn_mode)
 
 
+def build_model(inputs, flow_maps, config=None, reuse_variables=None):
+    score_map_set = []
+    geo_map_set = []
+    state   = None
+    # initialize with global setup
+    reuse_variables = reuse_variables
+    for k in range(config.num_steps):
+        F_score, F_geometry, state = gru_agg(inputs[:, k, :, :, :], state, config, reuse_variables, lstm=True)
+        score_map_set.append(F_score[0, :, :, :])
+        geo_map_set.append(F_geometry[0, :, :, :])
+        if k < config.num_steps-1:
+            state = (flow_inverse_warp(state[0], flow_maps[:, k, :, :, :]), flow_inverse_warp(state[1], \
+                            flow_maps[:, k, :, :, :]), flow_inverse_warp(state[2], flow_maps[:, k, :, :, :]))
+        reuse_variables=True
+    return score_map_set, geo_map_set
+
 def tower_loss(inputs, flow_maps, score_maps, geo_maps, training_masks, gpu_id=None, config=None, reuse_variables=None):
     """
     input with input features, flow estimaation for score maps, geo maps
@@ -82,7 +98,8 @@ def tower_loss(inputs, flow_maps, score_maps, geo_maps, training_masks, gpu_id=N
     loss_cls   = tf.reduce_mean(tf.stack(L_Dice_set, 0))
     loss_aabb  = tf.reduce_mean(tf.stack(L_AABB_set, 0))
     loss_theta = tf.reduce_mean(tf.stack(L_Theta_set, 0))
-    cost = tf.reduce_mean(tf.stack(loss_set, 0))
+    loss_model = tf.reduce_mean(tf.stack(loss_set, 0))
+    cost = loss_model
     # self._loss = tf.reshape(self._loss, [self.batch_size, self.num_steps, `])
     # try to transform the loss array with tf.reshape
     final_state = state
@@ -91,10 +108,13 @@ def tower_loss(inputs, flow_maps, score_maps, geo_maps, training_masks, gpu_id=N
         tf.summary.image('score_map_pred', tf.stack(score_map_set, 0) * 255)
         tf.summary.image('geo_map_0', geo_maps[0, :, :, :, 0:1])
         tf.summary.image('geo_map_0_pred', tf.stack(geo_map_set, 0))
+        tf.summary.image('training_mask', training_masks[0, :, :, :, :]* 255)
         tf.summary.scalar('score_loss', loss_cls)
         tf.summary.scalar('geometry_loss', loss_aabb)
         tf.summary.scalar('angle_loss', loss_theta)
-    return cost, cost
+        tf.summary.scalar('model_loss', loss_model)
+        tf.summary.scalar('total_loss', cost)
+    return cost, loss_model
 
 
 def gru_agg(input, state, config, reuse_variables, is_training=True, lstm=True):
@@ -107,7 +127,7 @@ def gru_agg(input, state, config, reuse_variables, is_training=True, lstm=True):
         if lstm:
             cell = tf.contrib.rnn.MultiRNNCell(
                 [make_cell() for _ in range(config.num_layers)], state_is_tuple=True)
-            initial_state = cell.zero_state(config.batch_size, tf.float32)
+            initial_state = cell.zero_state(FLAGS.batch_size_per_gpu, tf.float32)
             if state is None:
                 state = initial_state
             output, state = cell(input, state)
@@ -115,8 +135,10 @@ def gru_agg(input, state, config, reuse_variables, is_training=True, lstm=True):
             with tf.variable_scope('pred_module', reuse=reuse_variables):
                 F_score = slim.conv2d(output, 1, 1, activation_fn=tf.nn.sigmoid, normalizer_fn=None)
                 # 4 channel of axis aligned bbox and 1 channel rotation angle
-                geo_map = slim.conv2d(output, 4, 1, activation_fn=tf.nn.sigmoid, normalizer_fn=None) * 512
-                angle_map = (slim.conv2d(output, 1, 1, activation_fn=tf.nn.sigmoid, normalizer_fn=None) - 0.5) * np.pi/2 # angle is between [-45, 45]
+                output1 = slim.conv2d(output, 32, 1, activation_fn=tf.sigmoid, normalizer_fn=None)
+                geo_map = slim.conv2d(output1, 4, 1, activation_fn=tf.nn.sigmoid, normalizer_fn=None) * 512
+                # add a separate layer for further regression
+                angle_map = (slim.conv2d(output1, 1, 1, activation_fn=tf.nn.sigmoid, normalizer_fn=None) - 0.5) * np.pi/2 # angle is between [-45, 45]
                 F_geometry = tf.concat([geo_map, angle_map], axis=-1)
             return F_score, F_geometry, state
         else:

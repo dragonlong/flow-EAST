@@ -41,7 +41,6 @@ import GPUtil
 from copy import deepcopy
 import pandas as pd
 import seaborn as sns
-
 import tensorflow as tf
 from tensorflow.contrib import slim
 from model import model
@@ -51,7 +50,7 @@ from pwc.model_pwcnet import ModelPWCNet, _DEFAULT_PWCNET_VAL_OPTIONS
 from config.net_options import sys_cfg
 from config.configrnn import get_config
 from pytorchpwc.utils import flow_inverse_warp
-from utils import icdar
+from utils import icdar_light
 now = datetime.now()
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -72,14 +71,16 @@ if platform.uname()[1] != 'dragonx-H97N-WIFI':
     ARC = '/work/cascades/lxiaol9/ARC/'
     ICDAR2013 = '/work/cascades/lxiaol9/ARC/EAST/data/ICDAR2013/'
 #
+tf.app.flags.DEFINE_string('mode', 'run', 'whether debugging or real running')
 tf.app.flags.DEFINE_string('data_path', ICDAR2013+'/train', 'data of ICDAR')
-tf.app.flags.DEFINE_boolean('from_source', True, 'whether load data from source')
+# take care the parameters that are related to data inputs,
+tf.app.flags.DEFINE_boolean('from_source', False, 'whether load data from source')
 tf.app.flags.DEFINE_integer('input_size', 512, '')
-tf.app.flags.DEFINE_integer('batch_size_per_gpu', 8, '')
+tf.app.flags.DEFINE_integer('batch_size_per_gpu', 16, '')
 tf.app.flags.DEFINE_integer('num_gpus', 2, '')
 tf.app.flags.DEFINE_integer('num_steps', 5, '')
 tf.app.flags.DEFINE_string('gpu_list', '0,1', '')
-tf.app.flags.DEFINE_integer('num_readers', 20, '')
+tf.app.flags.DEFINE_integer('num_readers', 28, '')
 
 tf.app.flags.DEFINE_float('learning_rate', 0.0001, '')
 tf.app.flags.DEFINE_integer('max_steps', 100000, '')
@@ -107,7 +108,8 @@ def main(argv=None):
     config.batch_size = FLAGS.batch_size_per_gpu * FLAGS.num_gpus
     config.num_layers = 3
     config.num_steps  = 5
-    eval_config = config
+    #
+    eval_config = get_config(FLAGS)
     eval_config.batch_size = 2
     eval_config.num_layers = 3
     eval_config.num_steps  = 5
@@ -128,7 +130,7 @@ def main(argv=None):
         nn_opts['ckpt_path']    = '/work/cascades/lxiaol9/ARC/PWC/checkpoints/pwcnet-lg-6-2-multisteps-chairsthingsmix/pwcnet.ckpt-595000'
 
     nn_opts['verbose']     = True
-    nn_opts['batch_size']  = 10     # This is Batch_size per GPU
+    nn_opts['batch_size']  = 32     # This is Batch_size per GPU(16*4/2/2 = 16)
     nn_opts['use_tf_data'] = False  # Don't use tf.data reader for this simple task
     nn_opts['gpu_devices'] = ['/device:GPU:0', '/device:GPU:1']    #
     nn_opts['controller']  = '/device:CPU:0'  # Evaluate on CPU or GPU?
@@ -139,14 +141,14 @@ def main(argv=None):
     east_opts = {
     'verbose': True,
     'ckpt_path': FLAGS.pretrained_model_path,
-    'batch_size': 20,
-    'batch_size_per_gpu': 10,
+    'batch_size': 40,
+    'batch_size_per_gpu': 20,
     'gpu_devices': ['/device:GPU:0', '/device:GPU:1'],
     # controller device to put the model's variables on (usually, /cpu:0 or /gpu:0 -> try both!)
     'controller': '/device:CPU:0',
-    'x_dtype': tf.float32,  # image pairs input type
+    'x_dtype': tf.float32,     # image pairs input type
     'x_shape': [512, 512, 3],  # image pairs input shape [2, H, W, 3]
-    'y_score_shape': [128, 128, 1],  # u,v flows output type
+    'y_score_shape': [128, 128, 1],     # u,v flows output type
     'y_geometry_shape': [128, 128, 5],  # u,v flows output shape [H, W, 2]
     'x_mask_shape': [128, 128, 1]
     }
@@ -163,7 +165,7 @@ def main(argv=None):
     len_seq = FLAGS.num_steps
     # input_images = tf.placeholder(tf.float32, shape=[batch_size*len_seq, 512, 512, 3], name='input_images')
     input_feat_maps = tf.placeholder(tf.float32, shape=[batch_size, len_seq, 128, 128, 32], name='input_feature_maps')
-    input_flow_maps = tf.placeholder(tf.float32, shape=[batch_size, len_seq, 128, 128, 2], name='input_flow_maps')
+    input_flow_maps = tf.placeholder(tf.float32, shape=[batch_size, len_seq-1, 128, 128, 2], name='input_flow_maps')
     input_score_maps = tf.placeholder(tf.float32, shape=[batch_size , len_seq, 128, 128, 1], name='input_score_maps')
     if FLAGS.geometry == 'RBOX':
         input_geo_maps = tf.placeholder(tf.float32, shape=[batch_size, len_seq, 128, 128, 5], name='input_geo_maps')
@@ -222,10 +224,10 @@ def main(argv=None):
     init = tf.global_variables_initializer()
     g = tf.get_default_graph()
     with g.as_default():
-        config = tf.ConfigProto()
-        config.gpu_options.allow_growth = True
-        config.allow_soft_placement = True
-        sess1 = tf.Session(config=config)
+        config1 = tf.ConfigProto()
+        config1.gpu_options.allow_growth = True
+        config1.allow_soft_placement = True
+        sess1 = tf.Session(config=config1)
         if FLAGS.restore:
             print('continue training from previous checkpoint')
             ckpt = FLAGS.prev_checkpoint_path
@@ -259,32 +261,34 @@ def main(argv=None):
     nn = ModelPWCNet(mode='test', options=nn_opts)
     print("Step 3: PWC model has been reconstructed")
     GPUtil.showUtilization()
-    train_data_generator = icdar.get_batch_seq(num_workers=FLAGS.num_readers, config=config, is_training=True)
-    val_data_generator = icdar.get_batch_seq(num_workers=FLAGS.num_readers, config=eval_config, is_training=False)
+    train_data_generator = icdar_light.get_batch_seq(num_workers=FLAGS.num_readers, config=config, is_training=True)
+    # val_data_generator = icdar.get_batch_seq(num_workers=FLAGS.num_readers, config=eval_config, is_training=False)
     start = time.time()
 #============================= IV. Training over Steps(!!!)================================================#
     print("Now we're starting training!!!")
     for step in range(FLAGS.max_steps):
     #>>>>>>>>>>>>> data
-        data = next(train_data_generator)
+        if FLAGS.mode == "debug":
+            data = []
+            data.append(np.ones((config.batch_size, FLAGS.num_steps, 512, 512, 3), dtype=np.float32))
+            data.append(np.ones((batch_size , len_seq, 128, 128, 1), dtype=np.float32))
+            data.append(np.ones((batch_size , len_seq, 128, 128, 5), dtype=np.float32))
+            data.append(np.ones((batch_size , len_seq, 128, 128, 1), dtype=np.float32))
+        else:
+            data = next(train_data_generator)
         if step < 3:
             print("Data ready!!!")
         east_feed = np.reshape(data[0], [-1, 512, 512, 3])
-        # data for flow net
-        # log: flow data changes
-        target_frame = np.reshape(np.array(data[0])[:, 0:4, :, : , :][:, np.newaxis, :, :, :], [-1, 512, 512, 3])
-        source_frame = np.reshape(np.array(data[0])[:, 1:5, :, : , :][:, np.newaxis, :, :, :], [-1, 512, 512, 3])
+        target_frame = np.reshape(np.array(data[0])[:, 0:4, :, : , :], [-1, 512, 512, 3])
+        source_frame = np.reshape(np.array(data[0])[:, 1:5, :, : , :], [-1, 512, 512, 3])
         flow_feed = np.concatenate((source_frame[:, np.newaxis, :, :, :], target_frame[:, np.newaxis, :, :, :]), axis = 1)
         flow_maps_stack = []
     # >>>>>>>>>>>>>>>>>>>>>>>>>>> feature extraction with EAST >>>>>>>>>>>>>>>>>>>>>>>> #
-        # sometimes we need to run several rounds
         rounds = int(east_feed.shape[0]/east_opts['batch_size'])
         feature_stack = []
         flow_maps_stack = []
         for r in range(rounds):
             feature_stack.append(east_net.sess.run([east_net.y_hat_test_tnsr], feed_dict={east_net.x_tnsr:east_feed[r*east_opts['batch_size']:(r+1)*east_opts['batch_size'], :, :, :]})[0][0])
-            # print("Step 4: now finish running one round of EAST for feature generation")
-            # GPUtil.showUtilization()
         feature_maps = np.concatenate(feature_stack, axis=0)
         feature_maps_reshape = np.reshape(feature_maps, [-1, config.num_steps, 128, 128, 32])
     #>>>>>>>>>>>>>>> flow estimation with PWCnet
@@ -299,11 +303,11 @@ def main(argv=None):
         for r in range(rounds):
             feed_dict = {nn.x_tnsr: x_adapt[r*mini_batch:(r+1)*mini_batch, :, :, :, :]}
             y_hat = nn.sess.run(nn.y_hat_test_tnsr, feed_dict=feed_dict)
-            print("Step 5: now finish running one round of PWCnet for flow estimation")
-            GPUtil.showUtilization()
+            if FLAGS.mode == "debug":
+                print("Step 5: now finish running one round of PWCnet for flow estimation")
+                GPUtil.showUtilization()
             y_hats, _ = nn.postproc_y_hat_test(y_hat, y_adapt_info)# suppose to be [batch, height, width, 2]
             flow_maps_stack.append(y_hats[:, 1::4, 1::4, :]/4)
-        nn.sess.close()
         flow_maps = np.concatenate(flow_maps_stack, axis=0)
         print("flow maps has shape ", flow_maps.shape[:])
         flow_maps = np.reshape(flow_maps, [-1, FLAGS.num_steps-1, 128, 128, 2])
@@ -316,8 +320,9 @@ def main(argv=None):
                                                    input_training_masks: data[3],
                                                    input_flow_maps: flow_maps
                                                    })
-            print("Step 6: running one round on training!!!")
-            GPUtil.showUtilization()
+            if FLAGS.mode == "debug":
+                print("Step 6: running one round on training!!!")
+                GPUtil.showUtilization()
             if np.isnan(tl):
                 print('Loss diverged, stop training')
                 break
@@ -332,7 +337,7 @@ def main(argv=None):
                 saver.save(sess1, FLAGS.checkpoint_path + 'model.ckpt', global_step=global_step)
 
             if step % FLAGS.save_summary_steps == 0:
-                _, tl, summary_str = sess1.run([train_op, total_loss, summary_op], feed_dict={input_feat_maps: feature_maps,
+                _, tl, summary_str = sess1.run([train_op, total_loss, summary_op], feed_dict={input_feat_maps: feature_maps_reshape,
                                                                  input_score_maps: data[1],
                                                                  input_geo_maps: data[2],
                                                                  input_training_masks: data[3],
