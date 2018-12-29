@@ -1,0 +1,85 @@
+2018-12-29 14:29:01.181205: I tensorflow/core/platform/cpu_feature_guard.cc:141] Your CPU supports instructions that this TensorFlow binary was not compiled to use: AVX2 FMA
+2018-12-29 14:29:01.418634: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1405] Found device 0 with properties: 
+name: Tesla P100-PCIE-12GB major: 6 minor: 0 memoryClockRate(GHz): 1.3285
+pciBusID: 0000:02:00.0
+totalMemory: 11.91GiB freeMemory: 11.62GiB
+2018-12-29 14:29:01.630991: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1405] Found device 1 with properties: 
+name: Tesla P100-PCIE-12GB major: 6 minor: 0 memoryClockRate(GHz): 1.3285
+pciBusID: 0000:82:00.0
+totalMemory: 11.91GiB freeMemory: 11.62GiB
+2018-12-29 14:29:01.631059: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1484] Adding visible gpu devices: 0, 1
+2018-12-29 14:29:08.693378: I tensorflow/core/common_runtime/gpu/gpu_device.cc:965] Device interconnect StreamExecutor with strength 1 edge matrix:
+2018-12-29 14:29:08.693425: I tensorflow/core/common_runtime/gpu/gpu_device.cc:971]      0 1 
+2018-12-29 14:29:08.693432: I tensorflow/core/common_runtime/gpu/gpu_device.cc:984] 0:   N N 
+2018-12-29 14:29:08.693436: I tensorflow/core/common_runtime/gpu/gpu_device.cc:984] 1:   N N 
+2018-12-29 14:29:08.693868: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1097] Created TensorFlow device (/job:localhost/replica:0/task:0/device:GPU:0 with 11245 MB memory) -> physical GPU (device: 0, name: Tesla P100-PCIE-12GB, pci bus id: 0000:02:00.0, compute capability: 6.0)
+2018-12-29 14:29:08.694775: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1097] Created TensorFlow device (/job:localhost/replica:0/task:0/device:GPU:1 with 11245 MB memory) -> physical GPU (device: 1, name: Tesla P100-PCIE-12GB, pci bus id: 0000:82:00.0, compute capability: 6.0)
+2018-12-29 14:29:10.070939: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1484] Adding visible gpu devices: 0, 1
+2018-12-29 14:29:10.071041: I tensorflow/core/common_runtime/gpu/gpu_device.cc:965] Device interconnect StreamExecutor with strength 1 edge matrix:
+2018-12-29 14:29:10.071051: I tensorflow/core/common_runtime/gpu/gpu_device.cc:971]      0 1 
+2018-12-29 14:29:10.071058: I tensorflow/core/common_runtime/gpu/gpu_device.cc:984] 0:   N N 
+2018-12-29 14:29:10.071063: I tensorflow/core/common_runtime/gpu/gpu_device.cc:984] 1:   N N 
+2018-12-29 14:29:10.071484: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1097] Created TensorFlow device (/job:localhost/replica:0/task:0/device:GPU:0 with 11245 MB memory) -> physical GPU (device: 0, name: Tesla P100-PCIE-12GB, pci bus id: 0000:02:00.0, compute capability: 6.0)
+2018-12-29 14:29:10.071610: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1097] Created TensorFlow device (/job:localhost/replica:0/task:0/device:GPU:1 with 11245 MB memory) -> physical GPU (device: 1, name: Tesla P100-PCIE-12GB, pci bus id: 0000:82:00.0, compute capability: 6.0)
+2018-12-29 14:29:14.085412: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1484] Adding visible gpu devices: 0, 1
+2018-12-29 14:29:14.085534: I tensorflow/core/common_runtime/gpu/gpu_device.cc:965] Device interconnect StreamExecutor with strength 1 edge matrix:
+2018-12-29 14:29:14.085546: I tensorflow/core/common_runtime/gpu/gpu_device.cc:971]      0 1 
+2018-12-29 14:29:14.085553: I tensorflow/core/common_runtime/gpu/gpu_device.cc:984] 0:   N N 
+2018-12-29 14:29:14.085558: I tensorflow/core/common_runtime/gpu/gpu_device.cc:984] 1:   N N 
+2018-12-29 14:29:14.086012: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1097] Created TensorFlow device (/job:localhost/replica:0/task:0/device:GPU:0 with 11245 MB memory) -> physical GPU (device: 0, name: Tesla P100-PCIE-12GB, pci bus id: 0000:02:00.0, compute capability: 6.0)
+2018-12-29 14:29:14.086150: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1097] Created TensorFlow device (/job:localhost/replica:0/task:0/device:GPU:1 with 11245 MB memory) -> physical GPU (device: 1, name: Tesla P100-PCIE-12GB, pci bus id: 0000:82:00.0, compute capability: 6.0)
+WARNING:tensorflow:From /home/lxiaol9/anaconda3/envs/dlubu36/lib/python3.6/site-packages/tensorflow/python/keras/initializers.py:104: calling VarianceScaling.__init__ (from tensorflow.python.ops.init_ops) with distribution=normal is deprecated and will be removed in a future version.
+Instructions for updating:
+`normal` is a deprecated alias for `truncated_normal`
+INFO:tensorflow:Restoring parameters from /work/cascades/lxiaol9/ARC/PWC/checkpoints/pwcnet-sm-6-2-multisteps-chairsthingsmix/pwcnet.ckpt-592000
+Now it knows it's in a remote cluster
+continue training from previous weights
+Restore from /work/cascades/lxiaol9/ARC/EAST/checkpoints/GRU_agg/20181205-000440/model.ckpt-7042
+Step 1: AGG model has been reconstructed
+| ID | GPU | MEM |
+------------------
+|  0 |  0% |  3% |
+|  1 |  0% |  3% |
+resnet_v1_50/block1 (20, 64, 64, 256)
+resnet_v1_50/block2 (20, 32, 32, 512)
+resnet_v1_50/block3 (20, 16, 16, 1024)
+resnet_v1_50/block4 (20, 16, 16, 2048)
+Shape of f_0 (20, 16, 16, 2048)
+Shape of f_1 (20, 32, 32, 512)
+Shape of f_2 (20, 64, 64, 256)
+Shape of f_3 (20, 128, 128, 64)
+Shape of h_0 (20, 16, 16, 2048), g_0 (20, 32, 32, 2048)
+Shape of h_1 (20, 32, 32, 128), g_1 (20, 64, 64, 128)
+Shape of h_2 (20, 64, 64, 64), g_2 (20, 128, 128, 64)
+Shape of h_3 (20, 128, 128, 32), g_3 (20, 128, 128, 32)
+resnet_v1_50/block1 (20, 64, 64, 256)
+resnet_v1_50/block2 (20, 32, 32, 512)
+resnet_v1_50/block3 (20, 16, 16, 1024)
+resnet_v1_50/block4 (20, 16, 16, 2048)
+Shape of f_0 (20, 16, 16, 2048)
+Shape of f_1 (20, 32, 32, 512)
+Shape of f_2 (20, 64, 64, 256)
+Shape of f_3 (20, 128, 128, 64)
+Shape of h_0 (20, 16, 16, 2048), g_0 (20, 32, 32, 2048)
+Shape of h_1 (20, 32, 32, 128), g_1 (20, 64, 64, 128)
+Shape of h_2 (20, 64, 64, 64), g_2 (20, 128, 128, 64)
+Shape of h_3 (20, 128, 128, 32), g_3 (20, 128, 128, 32)
+Loading model checkpoint /work/cascades/lxiaol9/ARC/EAST/checkpoints/east/20180921-173054/model.ckpt-56092 for eval or testing...
+
+... model loaded
+Step 2: EAST model has been reconstructed
+| ID | GPU | MEM |
+------------------
+|  0 |  0% |  5% |
+|  1 |  0% |  3% |
+Building model...
+... model built.
+Loading model checkpoint /work/cascades/lxiaol9/ARC/PWC/checkpoints/pwcnet-sm-6-2-multisteps-chairsthingsmix/pwcnet.ckpt-592000 for eval or testing...
+
+... model loaded
+Step 3: PWC model has been reconstructed
+| ID | GPU | MEM |
+------------------
+|  0 |  0% |  5% |
+|  1 |  0% |  3% |
+Now we're starting training!!!

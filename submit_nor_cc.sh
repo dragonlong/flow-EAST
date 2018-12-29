@@ -1,5 +1,5 @@
 #!/bin/bash
-#PBS -l walltime=24:00:00
+#PBS -l walltime=01:20:00:00
 #PBS -l nodes=1:ppn=20:gpus=2
 #PBS -W group_list=cascades
 #PBS -q v100_normal_q
@@ -24,4 +24,4 @@ export LANG=en_GB.UTF-8
 cd /home/lxiaol9/videoText2018/flow-EAST/
 #python train_rnn_east_crop1.py 2>&1 | tee output1.log
 #python train_lstm_east_2013_1.py 2>&1 | tee output1.log
-python train_flow_based_video_object_detection_modulized.py 2>&1 | tee output_modulized.log
+python train_flow_based_video_object_detection_recurrent2.py 2>&1 | tee output_recurrent2.log
