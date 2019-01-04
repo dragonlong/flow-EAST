@@ -1,0 +1,7 @@
+ unsupervised domain adaptation: the learning sample contains a set of labeled source examples, a set of unlabeled source examples and an unlabeled set of target examples.
+ https://joshua19881228.github.io/2017-02-22-ADDA/
+ Rendered depth scans of synthesized object models from the Model- Net [38]
+ dataset serve as our source domain, and we test our domain adaptation method
+ on three different target domains, namely: ShapeNet [2] (another synthe- sized 3D model dataset), the Redwood Object Scans real depth scan dataset [3],
+ and the 3DCNN real depth scan dataset [22].
+ Average distance Error (AE) between each predicted keypoint configuration and the corresponding an- notation and plot the Percentage of Correct Keypoint (PCK) with respect to a threshold for each method for detailed comparison. We also introduce a new metric, Pose-invariant Average distance Error (PAE) based on (2), for a better illustration of how our proposed method works. The AE and PAE are shown in percentage and represent the relative ratio to the diagonal length of the 3D bounding
