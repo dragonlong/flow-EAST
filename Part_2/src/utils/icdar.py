@@ -31,7 +31,6 @@ tf.app.flags.DEFINE_integer('min_text_size', 5,
 tf.app.flags.DEFINE_float('min_crop_side_ratio', 0.1,
                           'when doing random crop from input image, the'
                           'min length of min(H, W')
-# add for test
 # tf.app.flags.DEFINE_string('data_path', '/home/lxiaol9/ARC/EASTRNN/data/ICDAR/train', 'data of ICDAR')
 #
 # tf.app.flags.DEFINE_integer('input_size', 512, '')
@@ -1685,7 +1684,6 @@ def generator_for_video(input_size=512, batch_size=32,
             # geo_maps_array_list.append(np.load(geo_name))
             # training_masks_array_list.append(np.load(mask_name))
             print('The preprocessing for Video {} has cost {} seconds'.format(video_set[k], time.time() - t_start))
-
     while True:
         index1 = index
         np.random.shuffle(index1)
